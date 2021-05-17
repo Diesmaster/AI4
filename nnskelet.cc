@@ -89,6 +89,8 @@ double gprime (double x, int type) {
 
 int main (int argc, char* argv[ ]) {
 
+  double fout = 0;
+
   int inputs, hiddens;            // aantal invoer- en verborgen knopen
                                   // inputs is exclusief de bias-knoop!
   double input[MAX];              // de invoer is input[1]...input[inputs]
@@ -159,14 +161,22 @@ int main (int argc, char* argv[ ]) {
   }
 
   for ( cnt = 1; cnt <= epochs; cnt++ ) {
-
+    for (int y = 0; y < hiddens; y++){
+      inhidden[y] = 0;
+      acthidden[y] = 0;
+    }
+    netoutput = 0;
+    inoutput = 0;
     // TODO-2 lees voorbeeld in naar input/target, of genereer ter plekke:
     // als voorbeeld: de XOR-functie, waarvoor geldt dat inputs = 2
-    input[0] = rand ( ) % 2;
-    target = input[0];
-    for(int i = 1; i < inputs; i++ ){
+    input[0] = -1;
+    for(int i = 1; i <= inputs; i++ ){
       input[i] = rand ( ) % 2;
-      target = int(( target + input[i] )) % 2;
+      if( i == 2 ) {
+        target = int(( input[1] + input[2] )) % 2;
+      }else if (i > 2){
+        target = int(( target + input[i] )) % 2;
+      }
     }
 
     // LATER TODO-7 Abalone, met inputs = 8:
@@ -178,13 +188,51 @@ int main (int argc, char* argv[ ]) {
     // TODO-3 stuur het voorbeeld door het netwerk
     // reken inhidden's uit, acthidden's, inoutput en netoutput
 
-    
+    inhidden[0] = -1;
+    for (int x = 0; x <= inputs; x++){
+      for (int y = 1; y < hiddens; y++){
+        inhidden[y] = inhidden[y] + input[x]*inputtohidden[x][y];
+      }
+    }
 
+    for(int y = 0; y < hiddens; y++){
+      acthidden[y] = g(inhidden[y], type);
 
-    // TODO-4 bereken error, delta, en deltahidden
+    }
+
+    for (int y = 0; y < hiddens; y++){
+      inoutput = inoutput + acthidden[y]*hiddentooutput[y];
+    }
+
+    netoutput = g(inoutput, type);
+
+    //std::cout << "netoutput: " << netoutput << "target: " << target << std::endl;
+
+    error = target - netoutput;
+    delta = error*gprime(inoutput, type);
+    for (int y = 0; y < hiddens; y++){
+        deltahidden[y] = gprime(inhidden[y], type)*hiddentooutput[y]*delta;
+    }
 
     // TODO-5 update gewichten hiddentooutput en inputtohidden
+    for (int y = 0; y < hiddens; y++){
+      hiddentooutput[y] = hiddentooutput[y] + ALPHA*acthidden[y]*delta;
+    }
 
+    for (int x = 0; x <= inputs; x++){
+      for (int y = 0; y < hiddens; y++){
+        inputtohidden[x][y] = inputtohidden[x][y] + ALPHA*input[x]*deltahidden[y];
+      }
+    }
+
+
+    if(cnt%1000 == 0){
+      std::cout << "gemiddelde fout is: " << fout << endl;
+      fout = fout + ((error*-1)/1000);
+      fout = 0;
+    }else{
+      fout = fout + error/1000;
+    }
     // TODO-6 beoordeel het netwerk en rapporteer
     // bijvoorbeeld (totaal)fout bij laatste 1000 voorbeelden
 
