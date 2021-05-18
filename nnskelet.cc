@@ -136,17 +136,19 @@ int main (int argc, char* argv[ ]) {
   srand (seed);
 
   // LATER TODO-7 lees de gehele Abalone dataset:
-  // ifstream abalonedata ("leiden.abalone.data",ios::in);
-  // if ( abalonedata.fail ( ) ) {
-  //   cout << "Inputfile bestaat niet!" << endl;
-  //   return 1;
-  // }//if
-  // const int SAMPLES = 4177;
-  // double abalone[SAMPLES][9];
-  // for ( i = 0; i < SAMPLES; i++ )
-  //   for ( j = 0; j < 9; j++ )
-  //     abalonedata >> abalone[i][j];
-  // abalonedata.close ( );
+   ifstream abalonedata ("leiden.abalone.data",ios::in);
+   if ( abalonedata.fail ( ) ) {
+     cout << "Inputfile bestaat niet!" << endl;
+     return 1;
+   }//if
+
+   const int SAMPLES = 4177;
+   double abalone[SAMPLES][9];
+
+   for ( i = 0; i < SAMPLES; i++ )
+     for ( j = 0; j < 9; j++ )
+       abalonedata >> abalone[i][j];
+   abalonedata.close ( );
 
   // TODO-1 initialiseer de gewichten random tussen -1 en 1:
   // inputtohidden en hiddentooutput
@@ -167,9 +169,8 @@ int main (int argc, char* argv[ ]) {
     }
     netoutput = 0;
     inoutput = 0;
-    // TODO-2 lees voorbeeld in naar input/target, of genereer ter plekke:
-    // als voorbeeld: de XOR-functie, waarvoor geldt dat inputs = 2
-    input[0] = -1;
+
+    /*input[0] = -1;
     for(int i = 1; i <= inputs; i++ ){
       input[i] = rand ( ) % 2;
       if( i == 2 ) {
@@ -177,16 +178,16 @@ int main (int argc, char* argv[ ]) {
       }else if (i > 2){
         target = int(( target + input[i] )) % 2;
       }
-    }
+    }*/
 
-    // LATER TODO-7 Abalone, met inputs = 8:
-    // int mysample = rand ( ) % SAMPLES;
-    // for ( j = 1; j <= 8; j++ )
-    //   input[j] = abalone[mysample][j-1];
-    // target = abalone[mysample][8] / 30.0;
-
-    // TODO-3 stuur het voorbeeld door het netwerk
-    // reken inhidden's uit, acthidden's, inoutput en netoutput
+     //LATER TODO-7 Abalone, met inputs = 8:
+     int mysample = rand ( ) % SAMPLES;
+     inputs = 8;
+     hiddens = 8;
+     for ( j = 1; j <= 8; j++ ){
+       input[j] = abalone[mysample][j-1];
+       target = abalone[mysample][8] / 30.0;
+     }
 
     inhidden[0] = -1;
     for (int x = 0; x <= inputs; x++){
@@ -206,15 +207,12 @@ int main (int argc, char* argv[ ]) {
 
     netoutput = g(inoutput, type);
 
-    //std::cout << "netoutput: " << netoutput << "target: " << target << std::endl;
-
     error = target - netoutput;
     delta = error*gprime(inoutput, type);
     for (int y = 0; y < hiddens; y++){
         deltahidden[y] = gprime(inhidden[y], type)*hiddentooutput[y]*delta;
     }
 
-    // TODO-5 update gewichten hiddentooutput en inputtohidden
     for (int y = 0; y < hiddens; y++){
       hiddentooutput[y] = hiddentooutput[y] + ALPHA*acthidden[y]*delta;
     }
@@ -225,16 +223,24 @@ int main (int argc, char* argv[ ]) {
       }
     }
 
+    //std::cout << "target: " << target << " netout: " << netoutput << std::endl;
+    if(cnt == epochs){
+      fout = fout + ((error*-1)/1000);
+      if(fout < 0){
+        fout = fout*-1;
+      }
+
+      std::cout << type << ", " << fout << std::endl;
+    }
 
     if(cnt%1000 == 0){
-      std::cout << "gemiddelde fout is: " << fout << endl;
+      //std::cout << "gemiddelde fout van de afgelopen 1000 is: " << fout << endl;
       fout = fout + ((error*-1)/1000);
       fout = 0;
     }else{
       fout = fout + error/1000;
     }
-    // TODO-6 beoordeel het netwerk en rapporteer
-    // bijvoorbeeld (totaal)fout bij laatste 1000 voorbeelden
+
 
   }//for
 
